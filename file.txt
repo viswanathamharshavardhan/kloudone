@@ -1,0 +1,241 @@
+Assigment on DDL, DML—20.08.2020
+
+postgres@suresh-HP-Notebook:~$ psql
+
+psql (9.3.24)
+
+Type "help" for help.
+
+
+
+postgres=# \d
+
+No relations found.
+
+postgres=# \c test
+
+You are now connected to database "test" as user "postgres".
+
+
+test=# create table employee(
+
+eid serial,
+
+ename varchar(20),
+
+department varchar(20));
+
+CREATE TABLE
+
+test=# \d
+
+                List of relations
+
+ Schema |       Name       |   Type   |  Owner   
+
+--------+------------------+----------+----------
+
+ public | employee         | table    | postgres
+
+ public | employee_eid_seq | sequence | postgres
+
+(2 rows)
+
+
+
+test=# \d employee
+
+test=# insert into employee(ename,department) values('Harsha','SE');
+
+INSERT 0 1
+
+test=# insert into employee(ename,department) values('Vardhan','SES');
+
+INSERT 0 1
+
+test=# select * from employee;
+
+ eid |  ename  | department 
+
+-----+---------+------------
+
+   1 | Harsha  | SE
+
+   2 | Vardhan | SES
+
+(2 rows)
+
+
+
+test=# CREATE TABLE COMPANY(
+
+   ID INT PRIMARY KEY     NOT NULL,
+
+   NAME           TEXT    NOT NULL,
+
+   AGE            INT     NOT NULL,
+
+   ADDRESS        CHAR(50),
+
+   SALARY         REAL
+
+);
+
+CREATE TABLE
+
+test=# drop table company;
+
+DROP TABLE
+
+
+
+
+
+#21-08-2020
+
+
+Triggers
+postgres@suresh-HP-Notebook:~$ psql
+
+psql (9.3.24)
+
+Type "help" for help.
+
+
+
+postgres=# CREATE TABLE AUDIT(
+
+EID INT NOT NULL,
+
+EDATE TEXT NOT NULL);
+
+CREATE TABLE
+
+postgres=# CREATE OR REPLACE FUNCTION auditlog() RETURNS TRIGGER AS $audit_trigger$
+
+postgres$# BEGIN
+
+postgres$# INSERT INTO AUDIT(EID,EDATE) VALUES (new.Id,current_timestamp);
+
+postgres$# RETURN NEW;
+
+postgres$# END;
+
+postgres$# $audit_trigger$ LANGUAGE plpgsl;
+
+ERROR:  language "plpgsl" does not exist
+
+postgres=# CREATE OR REPLACE FUNCTION auditlog() RETURNS TRIGGER AS $audit_trigger$
+
+              BEGIN
+
+                 INSERT INTO AUDIT(EID,EDATE) VALUES (new.Id,current_timestamp);
+
+                 RETURN NEW;
+
+              END;
+
+$audit_trigger$ LANGUAGE plpgsql;
+
+CREATE FUNCTION
+
+postgres=# CREATE TRIGGER example_audit_trigger AFTER INSERT ON EMPLOYEES
+
+postgres-# FOR EACH ROW EXECUTE PROCEDURE auditlog();
+
+ERROR:  relation "employees" does not exist
+
+postgres=# \d
+
+         List of relations
+
+ Schema | Name  | Type  |  Owner   
+
+--------+-------+-------+----------
+
+ public | audit | table | postgres
+
+(1 row)
+
+
+
+postgres=# CREATE TABLE EMPLOYEE(
+
+postgres(# EID INT,
+
+postgres(# ENAME VARCHAR(20),
+
+postgres(# ESALARY BIGINT);
+
+CREATE TABLE
+
+postgres=# CREATE TRIGGER example_audit_trigger AFTER INSERT ON EMPLOYEE 
+
+FOR EACH ROW EXECUTE PROCEDURE auditlog();
+
+CREATE TRIGGER
+
+
+postgres=# CREATE TABLE EMPLOYEES(                           
+
+ID INT,                                  
+
+ENAME VARCHAR(20),
+
+ESALARY BIGINT);
+
+CREATE TABLE
+
+postgres=# CREATE TRIGGER example_audit_trigger AFTER INSERT ON EMPLOYEES
+
+FOR EACH ROW EXECUTE PROCEDURE auditlog();
+
+CREATE TRIGGER
+
+
+postgres=# INSERT INTO EMPLOYEES (ID,ENAME,ESALARY) VALUES (1,'Harsha',20000.0);
+
+INSERT 0 1
+
+
+postgres=# SELECT * FROM pg_trigger;
+
+
+postgres=# SELECT tgname FROM pg_trigger, pg_class WHERE tgrelid=pg_class.oid AND relname='employees';
+
+        tgname         
+
+-----------------------
+
+ example_audit_trigger
+
+(1 row)
+
+
+
+
+Procedures
+
+postgres=# create or replace procedure emp("eid" integer,"ename" varchar2(20) ,"esalary" bigint ) LANGUAGE SQL AS $$ insert into public."employee" VALUES ("eid","ename","esalary");
+
+postgres=# $$;
+
+CREATE PROCEDURE
+
+postgres=# CALL emp(3','teju',30000.0);
+
+CALL
+
+postgres=# select * from employee;
+
+eid |  ename  | esalary 
+
+-----+---------+------------
+
+   1 | Harsha  | 20000.0
+
+   2 | Vardhan | 25000.0
+
+   3 | teju | 30000.0
+
+(3 rows)
